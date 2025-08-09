@@ -1,0 +1,23 @@
+‘Open-weight’ AI models enable researchers to perform custom training and study how information is represented inside their neural networks. Credit: Getty
+
+OpenAI has launched a large language model (LLM) that lives up to the company’s name. Known as gpt-oss, it is the first ‘reasoning’ artificial intelligence (AI) from the firm that is open-weight, meaning that researchers will be able to download it and customize it.
+
+The firm, based in San Francisco, California, detailed the system in a blogpost and technical description on 5 August. On some tasks, gpt-oss performs almost as well as the firm’s most advanced models. The LLM is available in two sizes, both of which can be run locally and offline — the smaller of them on a single laptop — rather than requiring cloud computing or an online interface. This means they can be used to analyse — or be trained further on — sensitive data that can’t be transferred outside a given network.
+
+“I’m very excited,” says Simon Frieder, a mathematician and computer scientist at the University of Oxford, UK. “The competition between open-source large language models is already strong, and this will make the competition even fiercer, which benefits the entire research community.”
+
+The release of gpt-oss comes at a time when powerful open-weight models from Chinese firms, such as Hangzhou-based DeepSeek and Beijing-based Moonshot AI , are gaining traction among researchers. Chinese open models already perform better than US-developed ones such as Llama (from Meta, based in Menlo Park, California) and are also poised to overtake them in terms of number of downloads, according to an analysis by Nathan Lambert , a machine-learning researcher at the Allen Institute for AI in Seattle, Washington, that was carried out before gpt-oss was released.
+
+Last month, the administration of US president Donald Trump highlighted open-weight AI models as being “essential for academic research” in its AI Action Plan. OpenAI’s decision to launch an open model has been long in the works and is not a response to the success of Chinese models, said Greg Brockman, one of the firm’s founders, who spoke to journalists ahead of the release of gpt-oss. “It was never a thing that we didn’t want to do,” he added.
+
+All models come with biases, so diversity among their creators benefits users, says Frieder. “Having a new top-performing model from a Western company is a step in the direction of levelling the playing field in terms of which companies dominate the open-weight model space,” he says.
+
+Until now, OpenAI has largely published proprietary models, the exception being GPT-2, a 2019 LLM released by the firm three years before it launched its popular ChatGPT chatbot.
+
+The latest open models are ‘reasoners’ trained to produce output using a step-by-step process that mimics thought. Previous reasoning models, such as OpenAI’s o3, have been shown to excel on science and mathematics problems . As well as using them to write computer code and review scholarly literature , scientists are experimenting with using LLMs as AI ‘co-scientists’ in the hope of accelerating research.
+
+In performance, OpenAI’s open models seem to be close to the firm’s most advanced, pay-to-access AIs — the main differences being the open models’ smaller sizes and their being text-only (they do not handle images or video). Gpt-oss can browse the web, execute code and operate software, and it outperforms similarly-sized open models on reasoning tasks, says the firm.
+
+On the AIME 2025 benchmark, which tasks AIs with solving challenging mathematics problems, the gpt-oss models score better than the best existing open models, such as DeepSeek’s R1, and one of the two is on a par with the leading open competitor on Humanity’s Last Exam, a 3,000-question test that covers expert-level knowledge across a range of subjects.
+
+or
