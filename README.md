@@ -1,124 +1,170 @@
 Nature Article Scraper
 
-A robust, polite web scraper for recent nature.com listings that saves article teasers/bodies to text files and writes rich metadata to metadata.jsonl.
+A small, resilient scraper for nature.com listing pages. It walks through paginated article listings, fetches matching article pages, extracts a clean title and text (teaser or full HTML body when available), and saves each to a .txt file. It also writes a structured metadata.jsonl index for downstream processing.
 
-<p align="center">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.9%2B-blue" />
-  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Status" src="https://img.shields.io/badge/status-active-success" />
-</p>
+Ethical use: Read and respect Nature’s Terms of Use and robots.txt. Scrape responsibly, add delays, and keep request volume low. Use this tool for personal/research purposes only.
 
+⸻
 
-Highlights
-	•	Resilient parsing of titles and content across several Nature layouts (meta tags, H1 fallbacks, body selectors, teaser fallbacks).
-	•	Safe filenames for Windows/macOS/Linux.
-	•	Retry with backoff and a polite default delay between requests.
-	•	JSON Lines metadata for easy downstream analysis.
+Features
+	•	Robust HTTP session with retries/backoff.
+	•	Exact type filtering (e.g., News).
+	•	Optional year filter via listing query.
+	•	Clean filename sanitization (safe on Windows/macOS/Linux).
+	•	Saves per-page folders and an indexed metadata.jsonl.
+	•	Defensive parsing of titles and article bodies.
 
-How it works
+⸻
 
-The script walks Nature listing pages (sorted by publication date), filters by year and article type (e.g., News), fetches each matching article, extracts the best-available title and text (body > teaser > meta description), sanitizes a filename, and saves:
-	•	<outdir>/Page_<N>/<sanitized-title>.txt — the article text (or a brief fallback if paywalled)
-	•	<outdir>/metadata.jsonl — one JSON object per line with fields like title, url, file, page, published, type, listed_type
+Requirements
+	•	Python: 3.9+
+	•	Packages: requests, beautifulsoup4
 
-Installation
+Install deps:
 
-# Clone the repo
-git clone https://github.com/Caranthir-0/nature-article-scraper.git
-cd nature-article-scraper
-
-# (Recommended) Create a virtual environment
-python -m venv .venv
-source .venv/bin/activate    # Windows: .venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 
-requirements.txt (provided in repo):
+If you don’t have a requirements.txt, install directly:
 
-beautifulsoup4>=4.12
-requests>=2.31
+pip install requests beautifulsoup4
 
-Quickstart
 
-# Scrape 2 listing pages of all types for 2025, write to ./output
-python scrape_nature.py --pages 2 --year 2025 --out output
+⸻
 
-# Scrape 5 listing pages, only items with type exactly "News", 2024
-python scrape_nature.py --pages 5 --type "News" --year 2024 --out output_news_2024
+Quick Start
 
-# Be extra polite with a longer delay (in seconds)
-python scrape_nature.py --pages 3 --delay 1.5
+Assuming the file is named scrape_nature.py (rename if needed):
 
-Arguments
+python scrape_nature.py --pages 2
+
+This scans the first 2 listing pages on nature.com/nature/articles?sort=PubDate and saves matches to ./output.
+
+Common examples
+	•	Only News articles from 2024, scan first 3 pages:
+
+python scrape_nature.py --pages 3 --type News --year 2024
+
+
+	•	Custom output folder and slower rate (1.5s delay):
+
+python scrape_nature.py --pages 5 --out data/nature --delay 1.5
+
+
+	•	All types, first page only (fast test):
+
+python scrape_nature.py --pages 1
+
+
+
+⸻
+
+Command-line arguments
 
 Flag	Type	Required	Default	Description
---pages	int	Yes	—	Number of listing pages to scan
---type	str	No	""	Exact article type to match (e.g., News, Editorial)
---year	int	No	None	Filter by publication year
---out	str	No	output	Output directory
---delay	float	No	0.8	Delay between requests (seconds)
+--pages	int	Yes	—	Number of listing pages to scan (1-based).
+--type	str	No	""	Exact article type to match (e.g., News). Leave empty for all.
+--year	int	No	None	Filter listing by year (e.g., 2020).
+--out	str	No	output	Output directory. Created if missing.
+--delay	float	No	0.8	Seconds to sleep between requests (politeness/backoff).
 
-Output structure
+Note: Type matching is exact string match against the listing’s span[data-test="article.type"]. Examples: News, Research, Editorial, etc. (as shown by Nature’s UI).
+
+⸻
+
+What gets saved
+
+Folder structure:
 
 output/
-├─ metadata.jsonl
-├─ Page_1/
-│  ├─ A_safe_sanitized_title.txt
-│  └─ Another_title.txt
-└─ Page_2/
-   └─ ...
+  metadata.jsonl            # one JSON object per saved article
+  Page_1/
+    <sanitized_title>.txt
+  Page_2/
+    <sanitized_title>.txt
+  ...
 
-metadata.jsonl example line:
+metadata.jsonl fields
 
-{"title": "Quantum widgets beat classical...", "url": "https://www.nature.com/articles/xxxx", "file": "Page_1/Quantum_widgets_beat_classical.txt", "page": 1, "published": "2025-02-14", "type": "News", "listed_type": "News"}
+Each line is a JSON object like:
 
-Responsible use & scraping etiquette
-	•	Respect the Terms of Use and robots.txt of target sites.
-	•	Keep a sensible --delay (default is polite); do not hammer servers.
-	•	Identify your scraper properly (customize the User-Agent string in build_session()).
-	•	This tool is for personal/educational use; do not republish paywalled content.
+{
+  "title": "Article title",
+  "url": "https://www.nature.com/...",
+  "file": "Page_1/Article_title.txt",
+  "page": 1,
+  "published": "2024-09-14",      
+  "type": "Research",              
+  "listed_type": "News"            
+}
+
+Field notes:
+	•	published – from meta[name="dc.date"] or itemprop="datePublished" if present.
+	•	type – from meta[name="dc.type"] or the visible type tag if present.
+	•	listed_type – the type shown on the listing page for that item.
+
+Filenames and sanitization
+	•	Titles are cleaned: whitespace collapsed, punctuation removed, non-safe characters stripped, spaces → _.
+	•	Windows reserved names (e.g., CON, PRN) are wrapped with underscores to avoid conflicts.
+	•	Length is capped (default 120 chars). If a filename already exists, a short hash suffix is added to avoid overwrites.
+
+⸻
+
+How it works (internals)
+	•	Listing URL: https://www.nature.com/nature/articles?sort=PubDate[&year=YYYY]&page=N
+	•	Parsing listings: Finds article blocks, extracts data-test="article.type" and the main link.
+	•	Article fetch: Requests each matching URL; parses title from common meta tags or <h1>, then tries body containers such as div.c-article-body.
+	•	Graceful fallbacks: If no body is found, it uses teaser/description; if still empty, writes "No content available.".
+	•	HTTP session: Retries with backoff for transient errors (429/5xx) and a polite User-Agent.
+
+⸻
+
+Tips & Good Citizenship
+	•	Start with small --pages and a larger --delay (e.g., 1.5–3.0).
+	•	Avoid parallel runs against the same site.
+	•	If you see HTTP 429 (rate limited), increase --delay or try later.
+	•	Content behind paywalls or rendered dynamically may not yield full text; this scraper focuses on HTML paragraphs.
+
+⸻
 
 Troubleshooting
-	•	Empty text files: Some articles are paywalled/JS-rendered. The scraper will save a teaser/meta description; check metadata.jsonl and the debug logs.
-	•	Weird filenames: We sanitize aggressively for cross-platform safety; see sanitize_filename().
-	•	Few or no matches: Ensure the --type matches exactly what Nature lists (e.g., News, Editorial, Research Highlight). Try running without --type to inspect listed_type values in metadata.jsonl.
+	•	[WARN] listing ... HTTP 429: You’re sending too many requests. Increase --delay, reduce --pages.
+	•	[ERROR] ... RequestException: Temporary network issue. The session will retry but may still fail; run again later.
+	•	Empty/short files: The article may be paywalled or structured differently; check the URL manually.
+	•	Different types not matching: Remember --type is an exact match to Nature’s label.
 
-Development
-	•	Python formatting: ruff / black (optional).
-	•	Lint: ruff (optional).
-	•	Tests (optional): add unit tests for sanitize_filename, parse_listing, and parsing helpers using cached HTML fixtures.
+⸻
 
-Suggested project structure
+Development notes
+	•	Core entrypoint: main() with argparse.
+	•	Key functions: build_session, sanitize_filename, extract_title, extract_teaser_or_body, parse_listing, scrape_nature.
+	•	metadata.jsonl is opened in append mode, so repeated runs add lines. Delete it if you want a fresh index.
 
-.
-├─ scrape_nature.py
-├─ requirements.txt
-├─ README.md
-├─ .gitignore
-├─ LICENSE
-├─ examples/
-│  └─ sample_metadata.jsonl
-└─ tests/ (optional)
+Running in a virtual environment
 
-.gitignore (excerpt)
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\\Scripts\\activate
+pip install -r requirements.txt
 
-.venv/
-__pycache__/
-*.pyc
-output/
-*.log
-.DS_Store
 
-Roadmap
-	•	Optional caching layer (e.g., requests-cache).
-	•	Parallel fetch with rate limiting.
-	•	Export to CSV/Parquet.
-	•	Minimal HTML->Markdown conversion for cleaner text.
+⸻
+
+FAQ
+
+Q: Does this bypass paywalls?
+A: No. It only parses publicly available HTML. Paywalled content will not be scraped.
+
+Q: Can I scrape other Nature journals?
+A: The base listing URL targets nature.com/nature/articles. You can adapt BASE_URL and the listing path, but CSS selectors may need updates.
+
+Q: How do I change the user agent?
+A: Edit build_session() and modify the User-Agent header string.
+
+⸻
+
+Contributing
+
+Issues and PRs are welcome. Please keep changes small and add helpful log messages.
 
 License
 
-This project is licensed under the MIT License. See LICENSE for details.
-
-Acknowledgements
-	•	Nature page structure and components change over time; selectors here are best-effort and may need periodic updates.
+Choose a license that suits your project (e.g., MIT, Apache-2.0) and add a LICENSE file.
